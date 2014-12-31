@@ -1,0 +1,36 @@
+{
+    "name": "ropendev/form",
+    "description": "Bridge between a html form builder (adamwathan) and a validator (laravel) : write things only once.",
+    "keywords": ["form", "form builder", "html form", "validator", "framework agnostic"],
+    "homepage": "http://www.robin-d.fr/",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": ":Robin",
+            "email": "contact@robin-d.fr",
+            "homepage": "http://www.robin-d.fr/",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "adamwathan/form": "dev-master",
+        "illuminate/validation": "4.2.*",
+        "symfony/translation": "2.5.*",
+        "symfony/config": "2.5.*"
+    },
+     "require-dev": {
+        "phpunit/phpunit" : "4.*"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "rOpenDev\\Cache\\Test\\": "tests"
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "rOpenDev\\Form\\": "src"
+        }
+    },
+    "minimum-stability": "dev"
+}
