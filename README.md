@@ -1,5 +1,7 @@
 # Form Building and Validation
 
+[![Build Status](https://travis-ci.org/RobinDev/vForm.svg?branch=master)](https://travis-ci.org/RobinDev/vForm)
+
 Small class to write less validator and form builder. Write once, reuse-it.
 
 ##Table of contents
