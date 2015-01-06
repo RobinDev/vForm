@@ -1,6 +1,8 @@
 # Form Building and Validation
 
+[![Quality Score](https://img.shields.io/scrutinizer/g/RobinDev/vForm.svg?style=flat-square)](https://scrutinizer-ci.com/g/RobinDev/vForm)
 [![Build Status](https://travis-ci.org/RobinDev/vForm.svg?branch=master)](https://travis-ci.org/RobinDev/vForm)
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/b5178218-125d-4bdf-8477-94639a3d1d88/mini.png)](https://insight.sensiolabs.com/projects/b5178218-125d-4bdf-8477-94639a3d1d88)
 
 Small class to write less validator and form builder. Write once, reuse-it.
 

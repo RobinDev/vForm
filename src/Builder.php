@@ -16,7 +16,7 @@ class Builder
     /** @var string **/
     protected $name;
 
-    /** @var AdamWathan\Form\FormBuilder **/
+    /** @var \AdamWathan\Form\FormBuilder **/
     public $formBuilder;
 
     /** @var array index fields add to FormBuilder **/
@@ -78,6 +78,7 @@ class Builder
      * Constructor
      *
      * @param string $name
+     * @param \Symfony\Component\Translation\TranslatorInterface $translator
      *
      * @return self
      */

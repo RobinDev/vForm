@@ -39,6 +39,8 @@ trait HTMLBuilderTrait
 
     /**
      * @param object|null $tmpl     Contain template engine instance (eg. : new League\Plates\Engine('/path/to/templates'))
+     *                              I should do an interface... meanwhile, you just need a method `render` with two args, the view
+     *                              and the data we pass to the view
      * @param string|null $tmplView (eg. : 'form')
      *
      * @return string
@@ -47,6 +49,7 @@ trait HTMLBuilderTrait
     {
         $_SESSION['csrf'] = $this->csrf;
 
+        $data = [];
         $data['formOpener']   = $this->getFormOpener();
         $data['form']         = $this->formBuilder;
         $data['fields']       = $this->fields;
@@ -86,7 +89,7 @@ trait HTMLBuilderTrait
      *
      * @return void
      */
-    protected function addAttributes($element, $attributes)
+    protected function addAttributes(\AdamWathan\Form\Elements\Element $element, $attributes)
     {
         foreach ($attributes as $key => $value) {
             is_int($key) ? $element->$value() : $element->$key($value);
