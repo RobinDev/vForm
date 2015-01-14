@@ -21,6 +21,8 @@ $fields = [
     'email'    => ['type' => 'email', 'required', 'email', 'label' => 'Email'],
     'password' => ['type' => 'password', 'required', 'min' => 4, 'max' => 200, 'label' => 'Password'],
     'sep01'    => ['type' => 'separator', 'tag' => 'h3', 'text' => 'Hello World!'],
+    'radioB'   => ['type' => 'radio', 'options' => [['label' => 'Forever', 'value' => '1'], ['label' => 'Just Five Minuts', 'value' => '2']], 'required', 'fieldFormat' => '<label class="btn btn-primary :active"><input type="radio" id=":name" name=":name" value=":value">:plainLabel</label>'],
+    'radioB2'   => ['type' => 'radio', 'options' => [ 1 => 'Forever', 2 => 'Just For Five Minuts'], 'required', 'fieldFormat' => '<label class="btn btn-primary :active"><input type="radio" id=":name" name=":name" value=":value">:plainLabel</label>'],
 ];
 
 $_SERVER['REQUEST_METHOD'] == 'POST' ? $form->addData(array_intersect_key($_POST, $fields)) : null;

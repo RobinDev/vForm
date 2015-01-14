@@ -13,6 +13,8 @@ class Builder
 {
     use HTMLBuilderTrait;
 
+    const DEFAULT_CHECKBOX_VALUE = 1;
+
     /** @var string **/
     protected $name;
 
@@ -27,6 +29,12 @@ class Builder
 
     /** @var array index fields constraints **/
     protected $fieldsConstraints = [];
+
+    /** @var array contain values for element can be checked (radio, checbox...) **/
+    protected $fieldsValuesForCanBeChecked = [];
+    protected $fieldsIsChecked = [];
+    protected $fieldsLabelForCanBeChecked = [];
+    protected $nameForCanBeChecked = [];
 
     /** @var array contain html attributes allowed **/
     protected $allowedAttributes = [
@@ -129,8 +137,10 @@ class Builder
      *
      * @return AdamWathan\Form\Elements\Element
      */
-    protected function field($name, &$attributes)
+    protected function field($name, &$attributes, $currentClassName = null)
     {
+        $currentClassName = $currentClassName === null ? $name : $currentClassName;
+
         if (!isset($attributes['type'])) {
             throw new \LogicException('Field `'.$name.'` doesn\'t have `type` attribute specified. You MUST specified it !');
         }
@@ -148,19 +158,26 @@ class Builder
             $field = $this->formBuilder->$type($name);
         }
 
+
+        if ($this->canBeChecked($field)) {
+            $this->fieldsValuesForCanBeChecked[$currentClassName] = $attributes['value'] = isset($attributes['value']) ? $attributes['value'] : self::DEFAULT_CHECKBOX_VALUE;
+            $this->fieldsLabelForCanBeChecked[$currentClassName]  = isset($attributes['label']) ? $attributes['label'] : null;
+            $this->nameForCanBeChecked[$currentClassName]  = $name;
+        }
+
         unset($attributes['type']);
 
         if (isset($attributes['label'])) {
-            $this->fieldsLabels[$name] = $this->formBuilder->label($attributes['label'])->forId($name);
+            $this->fieldsLabels[$currentClassName] = $this->formBuilder->label($attributes['label'])->forId($name);
             if (isset($attributes['labelAttributes'])) {
-                $this->addAttributes($this->fieldsLabels[$name], $attributes['labelAttributes']);
+                $this->addAttributes($this->fieldsLabels[$currentClassName], $attributes['labelAttributes']);
                 unset($attributes['labelAttributes']);
             }
             unset($attributes['label']);
         }
 
         if (isset($attributes['fieldFormat'])) {
-            $this->fieldsFormat[$name] = $attributes['fieldFormat'];
+            $this->fieldsFormat[$currentClassName] = $attributes['fieldFormat'];
             unset($attributes['fieldFormat']);
         }
 
@@ -178,14 +195,28 @@ class Builder
      */
     public function addField($name, $attributes = [])
     {
-        $this->fields[$name] = $this->field($name, $attributes);
-
-        $this->fieldsConstraints[$name] = [];
-
-        $this->addAttributesForField($name, $attributes);
+        if (isset($attributes['options']) && isset($attributes['type']) && $attributes['type'] != 'select') {
+            $c = 0;
+            foreach ($attributes['options'] as $key => $value) {
+                if (!is_array($value)) {
+                    $value = ['value' => $value == $c ? $value : $key, 'label' => $value];
+                }
+                $subAttr = array_diff_key($attributes, array_flip(['options']));
+                $subAttr = array_merge($subAttr, $value);
+                $currentClassName = $name.'-'.$subAttr['value'];
+                $this->fields[$currentClassName] = $this->field($name, $subAttr, $currentClassName);
+                $this->fieldsConstraints[$currentClassName] = [];
+                $this->addAttributesForField($currentClassName, $attributes);
+                ++$c;
+            }
+        } else {
+            $this->fields[$name] = $this->field($name, $attributes);
+            $this->fieldsConstraints[$name] = [];
+            $this->addAttributesForField($name, $attributes);
+        }
 
         // ? Return Field element
-        return $this->fields[$name];
+        return isset($this->fields[$name]) ? $this->fields[$name] : null;
     }
 
     /**
@@ -316,9 +347,14 @@ class Builder
 
         foreach ($data as $name => $value) {
             if (isset($this->fields[$name])) {
-                if (method_exists($this->fields[$name], 'check')) {
-                    $value == 1 ? $this->fields[$name]->check() : $this->fields[$name]->uncheck();
-                    $this->fields[$name]->value(1);
+                if ($this->canBeChecked($this->fields[$name])) {
+                    if ($value == $this->fieldsValuesForCanBeChecked[$name]) {
+                        $this->fields[$name]->check();
+                        $this->fieldsIsChecked[$name] = true;
+                    } else {
+                        $this->fields[$name]->uncheck();
+                        $this->fieldsIsChecked[$name] = false;
+                    }
                 }
                 elseif (method_exists($this->fields[$name], 'select')) {
                     $this->fields[$name]->select($value);
@@ -330,6 +366,16 @@ class Builder
         }
 
         return $this;
+    }
+
+    /**
+     * @param \AdamWathan\Form\Elements\Element $field
+     *
+     * @return bool
+     */
+    protected function canBeChecked($field)
+    {
+        return method_exists($field, 'check');
     }
 
     /**

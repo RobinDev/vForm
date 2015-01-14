@@ -58,11 +58,7 @@ trait HTMLBuilderTrait
 
         $data['fieldsFormatted'] = [];
         foreach ($this->fields as $name => $field) {
-            $data['fieldsFormatted'][$name] = str_replace(
-                [':label',                                                                   ':input'],
-                [isset($this->fieldsLabels[$name]) ? $this->fieldsLabels[$name]->render() : '', $field->render()],
-                isset($this->fieldsFormat[$name]) ? $this->fieldsFormat[$name] : $this->defaultFieldFormat
-            );
+            $data['fieldsFormatted'][$name] = $this->renderField($name, $field);
         }
 
         isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'POST' ? $this->addData(array_intersect_key($_POST, array_diff_key($this->fields, [$this->getTokenName() => 1]))) : null;
@@ -72,6 +68,41 @@ trait HTMLBuilderTrait
         } else {
             return self::defaultRenderEngine($data);
         }
+    }
+
+    /**
+     * @param string $name
+     * @param \AdamWathan\Form\Elements\Element $field
+     *
+     * @return string
+     */
+    protected function renderField($name, $field)
+    {
+        $fieldsFormatted = str_replace(
+                [':label',                                                                   ':input'],
+                [isset($this->fieldsLabels[$name]) ? $this->fieldsLabels[$name]->render() : '', $field->render()],
+                isset($this->fieldsFormat[$name]) ? $this->fieldsFormat[$name] : $this->defaultFieldFormat
+            );
+
+        if (method_exists($field, 'check')) {
+            $fieldsFormatted = str_replace(
+                [':checked', ':active', ':plainLabel', ':value', ':name'],
+                array_merge($this->isChecked($name) ? ['checked', 'active'] : ['', ''], [$this->fieldsLabelForCanBeChecked[$name], $this->fieldsValuesForCanBeChecked[$name], $this->nameForCanBeChecked[$name]]),
+                $fieldsFormatted
+            );
+        }
+
+        return $fieldsFormatted;
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    protected function isChecked($name)
+    {
+        return isset($this->fieldsIsChecked[$name]) && $this->fieldsIsChecked[$name] === true;
     }
 
     protected function getFormOpener()
