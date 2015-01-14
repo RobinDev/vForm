@@ -196,6 +196,14 @@ class Builder
     public function addField($name, $attributes = [])
     {
         if (isset($attributes['options']) && isset($attributes['type']) && $attributes['type'] != 'select') {
+            if (isset($attributes['encaps'])) {
+                $encaps = explode(':input', $attributes['encaps']);
+                if (count($encaps) === 2) {
+                    $this->addField('e'.$name.'1', ['type' => 'separator', 'fieldFormat' => $encaps[0]]);
+                } else {
+                    unset($encaps);
+                }
+            }
             $c = 0;
             foreach ($attributes['options'] as $key => $value) {
                 if (!is_array($value)) {
@@ -208,6 +216,9 @@ class Builder
                 $this->fieldsConstraints[$currentClassName] = [];
                 $this->addAttributesForField($currentClassName, $attributes);
                 ++$c;
+            }
+            if (isset($encaps)) {
+                $this->addField('e'.$name.'2', ['type' => 'separator', 'fieldFormat' => $encaps[1]]);
             }
         } else {
             $this->fields[$name] = $this->field($name, $attributes);
