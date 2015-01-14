@@ -199,6 +199,9 @@ class Builder
             if (isset($attributes['encaps'])) {
                 $encaps = explode(':input', $attributes['encaps']);
                 if (count($encaps) === 2) {
+                    if (strpos($encaps[0], ':label') !== false && isset($attributes['label'])) {
+                        $encaps[0] = str_replace(':label', $this->formBuilder->label($attributes['label'])->render(), $encaps[0]);
+                    }
                     $this->addField('e'.$name.'1', ['type' => 'separator', 'fieldFormat' => $encaps[0]]);
                 } else {
                     unset($encaps);
