@@ -184,6 +184,30 @@ class Builder
         return $field;
     }
 
+    protected static function isACanBeCheckedField($attributes)
+    {
+        return isset($attributes['options']) && isset($attributes['type']) && $attributes['type'] != 'select';
+    }
+
+    protected function encapsFields($name, $attributes)
+    {
+        if ($attributes !== null)  {
+            if (is_string($attributes)) {
+                return $this->addField('e'.$name.'2', ['type' => 'separator', 'fieldFormat' => $attributes]);
+            }
+            if (isset($attributes['encaps'])) {
+                $encaps = explode(':input', $attributes['encaps']);
+                if (count($encaps) === 2) {
+                    if (strpos($encaps[0], ':label') !== false && isset($attributes['label'])) {
+                        $encaps[0] = str_replace(':label', $this->formBuilder->label($attributes['label'])->render(), $encaps[0]);
+                    }
+                    $this->addField('e'.$name.'1', ['type' => 'separator', 'fieldFormat' => $encaps[0]]);
+                    return $encaps[1];
+                }
+            }
+        }
+    }
+
     /**
      * Add a field to the form instance and the validator
      * constraints by the way.
@@ -195,22 +219,12 @@ class Builder
      */
     public function addField($name, $attributes = [])
     {
-        if (isset($attributes['options']) && isset($attributes['type']) && $attributes['type'] != 'select') {
-            if (isset($attributes['encaps'])) {
-                $encaps = explode(':input', $attributes['encaps']);
-                if (count($encaps) === 2) {
-                    if (strpos($encaps[0], ':label') !== false && isset($attributes['label'])) {
-                        $encaps[0] = str_replace(':label', $this->formBuilder->label($attributes['label'])->render(), $encaps[0]);
-                    }
-                    $this->addField('e'.$name.'1', ['type' => 'separator', 'fieldFormat' => $encaps[0]]);
-                } else {
-                    unset($encaps);
-                }
-            }
+        if (self::isACanBeCheckedField($attributes)) {
+            $encaps = $this->encapsFields($name, $attributes);
             $c = 0;
             foreach ($attributes['options'] as $key => $value) {
                 if (!is_array($value)) {
-                    $value = ['value' => $value == $c ? $value : $key, 'label' => $value];
+                    $value = ['value' => $key == $c ? $value : $key, 'label' => $value];
                 }
                 $subAttr = array_diff_key($attributes, array_flip(['options']));
                 $subAttr = array_merge($subAttr, $value);
@@ -220,9 +234,7 @@ class Builder
                 $this->addAttributesForField($currentClassName, $attributes);
                 ++$c;
             }
-            if (isset($encaps)) {
-                $this->addField('e'.$name.'2', ['type' => 'separator', 'fieldFormat' => $encaps[1]]);
-            }
+            $this->encapsFields($name, $encaps);
         } else {
             $this->fields[$name] = $this->field($name, $attributes);
             $this->fieldsConstraints[$name] = [];
