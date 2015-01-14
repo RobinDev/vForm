@@ -132,6 +132,7 @@ class Builder
      *
      * @param string $name
      * @param array  $attributes
+     * @param string $currentClassName
      *
      * @throws \LogicException If there is no type specified
      *
@@ -189,6 +190,9 @@ class Builder
         return isset($attributes['options']) && isset($attributes['type']) && $attributes['type'] != 'select';
     }
 
+    /**
+     * @param string $name
+     */
     protected function encapsFields($name, $attributes)
     {
         if ($attributes !== null)  {
@@ -224,7 +228,7 @@ class Builder
             $c = 0;
             foreach ($attributes['options'] as $key => $value) {
                 if (!is_array($value)) {
-                    $value = ['value' => $key == $c ? $value : $key, 'label' => $value];
+                    $value = ['value' => $key === $c ? $value : $key, 'label' => $value];
                 }
                 $subAttr = array_diff_key($attributes, array_flip(['options']));
                 $subAttr = array_merge($subAttr, $value);
@@ -372,27 +376,45 @@ class Builder
         $this->formBuilder->bind($data);
 
         foreach ($data as $name => $value) {
-            if (isset($this->fields[$name])) {
-                if ($this->canBeChecked($this->fields[$name])) {
-                    if ($value == $this->fieldsValuesForCanBeChecked[$name]) {
-                        $this->fields[$name]->check();
-                        $this->fieldsIsChecked[$name] = true;
-                    } else {
-                        $this->fields[$name]->uncheck();
-                        $this->fieldsIsChecked[$name] = false;
-                    }
-                }
-                elseif (method_exists($this->fields[$name], 'select')) {
-                    $this->fields[$name]->select($value);
-                }
-                else {
-                    $this->fields[$name]->value($value);
-                }
-            }
+            $this->addDataFor($name, $value);
         }
 
         return $this;
     }
+
+    /**
+     * @param string $name
+     * @param string $value
+     */
+    protected function addDataFor($name, $value)
+    {
+        if (isset($this->fields[$name])) {
+            if ($this->canBeChecked($this->fields[$name])) {
+                $this->addDataForCanBeChecked($name, $value);
+            }
+            elseif (method_exists($this->fields[$name], 'select')) {
+                $this->fields[$name]->select($value);
+            }
+            else {
+                $this->fields[$name]->value($value);
+            }
+        } elseif ($this->nameForCanBeChecked !== null && in_array($name, $this->nameForCanBeChecked)) {
+            foreach (array_intersect($this->nameForCanBeChecked, [$name]) as $nName  => $v) {
+                $this->addDataForCanBeChecked($nName, $value);
+            }
+        }
+     }
+
+     protected function addDataForCanBeChecked($name, $value)
+     {
+         if ($value == $this->fieldsValuesForCanBeChecked[$name]) {
+            $this->fields[$name]->check();
+            $this->fieldsIsChecked[$name] = true;
+        } else {
+            $this->fields[$name]->uncheck();
+            $this->fieldsIsChecked[$name] = false;
+        }
+     }
 
     /**
      * @param \AdamWathan\Form\Elements\Element $field
